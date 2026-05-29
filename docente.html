@@ -6,6 +6,47 @@
 <title>Panel Docente — Mia</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
 <script>
+
+function doLogin() {
+  var u = document.getElementById('loginUser').value.trim();
+  var p = document.getElementById('loginPass').value;
+  if (!u || !p) return;
+  document.querySelector('.btn-login').textContent = '⏳ Validando...';
+  document.querySelector('.btn-login').disabled = true;
+
+  var name = 'cb_' + Math.round(Math.random() * 1e8);
+  window[name] = function(data) {
+    delete window[name];
+    document.head.removeChild(s);
+    document.querySelector('.btn-login').textContent = '🔓 Ingresar';
+    document.querySelector('.btn-login').disabled = false;
+    if (data && data.ok) {
+      document.getElementById('loginOverlay').style.display = 'none';
+      sessionStorage.setItem('docenteAuth', '1');
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  };
+  var s = document.createElement('script');
+  s.src = API_URL + '?action=login&user=' + encodeURIComponent(u) + '&pass=' + encodeURIComponent(p) + '&callback=' + name + '&t=' + Date.now();
+  s.onerror = function() {
+    delete window[name];
+    document.head.removeChild(s);
+    document.querySelector('.btn-login').textContent = '🔓 Ingresar';
+    document.querySelector('.btn-login').disabled = false;
+    document.getElementById('loginError').style.display = 'block';
+  };
+  document.head.appendChild(s);
+}
+
+// Si ya estaba autenticado en esta sesión, no pedir login de nuevo
+if (sessionStorage.getItem('docenteAuth') === '1') {
+  document.addEventListener('DOMContentLoaded', function() {
+    var ov = document.getElementById('loginOverlay');
+    if (ov) ov.style.display = 'none';
+  });
+}
+
 var API_URL='https://script.google.com/macros/s/AKfycbzYScFfkX2fqVbQKu_gzV_aTs0CuLdUKy8jRSHzon9a1hzZ3K82djLdfqRcNvJf7-SaKw/exec';
 var api={
   get:function(action){
@@ -186,6 +227,39 @@ var api={
   .btn-del-modal { padding: 11px 22px; background: var(--danger); color: #fff; border-radius: 9px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; }
   .btn-del-modal:hover { opacity: .85; }
 
+
+  #loginOverlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #1a1a2e, #2d1b69);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-box {
+    background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.15);
+    border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 360px;
+    text-align: center; color: #fff;
+  }
+  .login-box .lock { font-size: 48px; margin-bottom: 12px; }
+  .login-box h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .login-box p  { font-size: 13px; opacity: .65; margin-bottom: 28px; }
+  .login-field {
+    width: 100%; padding: 12px 16px; margin-bottom: 14px;
+    background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.2);
+    border-radius: 10px; color: #fff; font-size: 15px; outline: none;
+  }
+  .login-field::placeholder { color: rgba(255,255,255,.4); }
+  .login-field:focus { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.15); }
+  .btn-login {
+    width: 100%; padding: 13px; font-size: 16px; font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(102,126,234,.4); transition: transform .15s;
+  }
+  .btn-login:hover { transform: translateY(-2px); }
+  .login-error {
+    margin-top: 12px; font-size: 13px; color: #ff8a80;
+    display: none;
+  }
+
   #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 11px 22px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 999; white-space: nowrap; }
   #toast.show { opacity: 1; }
   #toast.ok  { background: var(--green); }
@@ -193,6 +267,19 @@ var api={
 </style>
 </head>
 <body>
+
+
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="lock">🔐</div>
+    <h2>Panel Docente — Mia</h2>
+    <p>Acceso restringido</p>
+    <input class="login-field" type="text" id="loginUser" placeholder="Usuario" autocomplete="off">
+    <input class="login-field" type="password" id="loginPass" placeholder="Contraseña" onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn-login" onclick="doLogin()">🔓 Ingresar</button>
+    <div class="login-error" id="loginError">❌ Usuario o contraseña incorrectos</div>
+  </div>
+</div>
 
 <header>
   <div class="logo">🔐</div>
