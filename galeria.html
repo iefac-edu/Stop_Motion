@@ -297,7 +297,7 @@ function jsonp(url, callback) {
     callback(data);
   };
   var script = document.createElement('script');
-  script.src = url + '&callback=' + name;
+  script.src = url + '&callback=' + name + '&t=' + Date.now();
   script.onerror = function() {
     delete window[name];
     document.head.removeChild(script);
