@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crear mi GIF</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+<style>
+  :root {
+    --primary: #4285F4;
+    --green:   #34A853;
+    --red:     #EA4335;
+    --yellow:  #FBBC05;
+    --bg:      #EEF3FF;
+    --card:    #FFFFFF;
+    --border:  #D0D7E8;
+    --text:    #202124;
+    --muted:   #6C757D;
+    --radius:  16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Google Sans', Segoe UI, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #4285F4, #1a56c4);
+    color: #fff; padding: 20px 24px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 3px 14px rgba(66,133,244,.4);
+  }
+  header .emoji { font-size: 36px; }
+  header h1 { font-size: 20px; font-weight: 700; }
+  header p  { font-size: 13px; opacity: .82; margin-top: 2px; }
+
+  main { max-width: 820px; margin: 0 auto; padding: 24px 14px 60px; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── INSTRUCCIONES ── */
+  .instrucciones {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: 0 2px 14px rgba(0,0,0,.08);
+    overflow: hidden;
+  }
+  .instr-hero {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 32px 24px; text-align: center; color: #fff;
+  }
+  .instr-hero .big-emoji { font-size: 64px; display: block; margin-bottom: 12px; }
+  .instr-hero h2 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+  .instr-hero p  { font-size: 15px; opacity: .9; }
+
+  .instr-body { padding: 28px 24px; }
+  .instr-body h3 { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 18px; text-align: center; }
+
+  .steps { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+  .step {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: #F8FAFF; border-radius: 12px; padding: 16px;
+    border-left: 4px solid var(--primary);
+  }
+  .step-num {
+    background: var(--primary); color: #fff;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; flex-shrink: 0;
+  }
+  .step-text strong { display: block; font-size: 15px; margin-bottom: 3px; }
+  .step-text span   { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .tip-box {
+    background: #FFF8E1; border: 2px solid #FFD54F;
+    border-radius: 12px; padding: 16px 18px;
+    display: flex; gap: 12px; align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .tip-box .tip-icon { font-size: 24px; flex-shrink: 0; }
+  .tip-box p { font-size: 13px; color: #5D4037; line-height: 1.6; }
+  .tip-box strong { color: #E65100; }
+
+  .btn-start {
+    width: 100%; padding: 16px; font-size: 18px; font-weight: 800;
+    background: linear-gradient(135deg, var(--green), #1e8c3a);
+    color: #fff; border: none; border-radius: 12px; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(52,168,83,.4);
+    transition: transform .15s, box-shadow .2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(52,168,83,.5); }
+
+  /* ── FORMULARIO ── */
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: 0 2px 10px rgba(0,0,0,.07);
+    padding: 24px; margin-bottom: 20px;
+  }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  .form-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .form-group { flex: 1; min-width: 170px; }
+  label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  input[type=text], select {
+    width: 100%; padding: 11px 14px;
+    border: 2px solid var(--border); border-radius: 9px;
+    font-size: 15px; outline: none; transition: border-color .2s;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--primary); }
+
+  /* ── SELECTOR DE MODO ── */
+  .modo-selector {
+    display: flex; gap: 12px; margin-bottom: 20px;
+    background: #F8FAFF; border-radius: 12px; padding: 8px;
+  }
+  .modo-btn {
+    flex: 1; padding: 10px; border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s;
+    background: transparent; color: var(--muted);
+  }
+  .modo-btn.active {
+    background: var(--primary); color: #fff;
+    box-shadow: 0 2px 8px rgba(66,133,244,.3);
+  }
+  .modo-btn:not(.active):hover {
+    background: #E8F0FE; color: var(--primary);
+  }
+
+  /* ── ZONA DE CAMARA ── */
+  .camara-container {
+    display: none; text-align: center;
+  }
+  .camara-container.active {
+    display: block;
+  }
+  #videoCamara {
+    width: 100%; max-width: 400px; border-radius: 16px;
+    background: #000; margin-bottom: 12px;
+    transform: scaleX(-1);
+  }
+  .btn-camara {
+    background: var(--primary); color: #fff;
+    border: none; padding: 12px 24px; border-radius: 40px;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    margin: 5px;
+    transition: all 0.2s;
+  }
+  .btn-camara:hover { transform: scale(1.02); background: #1a56c4; }
+  .btn-camara:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-danger-camara {
+    background: var(--red);
+  }
+  .fotos-tomadas {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 12px; justify-content: center;
+  }
+  .foto-preview {
+    width: 60px; height: 60px; object-fit: cover;
+    border-radius: 8px; border: 2px solid var(--green);
+    cursor: pointer;
+  }
+  .contador-fotos {
+    font-size: 12px; margin-top: 8px;
+    color: var(--muted);
+  }
+
+  /* ── ZONA DE SUBIDA ── */
+  .upload-container {
+    display: none;
+  }
+  .upload-container.active {
+    display: block;
+  }
+  .upload-zone {
+    border: 3px dashed var(--border); border-radius: 14px;
+    padding: 36px 20px; text-align: center;
+    cursor: pointer; transition: border-color .2s, background .2s;
+    background: #F8FAFF;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--primary); background: #EEF3FF;
+  }
+  .upload-zone .uz-icon { font-size: 52px; display: block; margin-bottom: 10px; }
+  .upload-zone h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; color: var(--primary); }
+  .upload-zone p  { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .upload-zone input { display: none; }
+
+  .upload-btn {
+    display: inline-block; margin-top: 16px;
+    padding: 12px 28px; background: var(--primary); color: #fff;
+    border-radius: 9px; font-size: 15px; font-weight: 700;
+    border: none; cursor: pointer;
+    box-shadow: 0 3px 10px rgba(66,133,244,.35);
+    transition: transform .12s;
+  }
+  .upload-btn:hover { transform: translateY(-1px); }
+
+  .upload-status {
+    margin-top: 14px; padding: 12px 16px;
+    border-radius: 10px; font-size: 14px; font-weight: 600;
+    display: none; text-align: center;
+  }
+  .upload-status.loading { background: #E8F0FE; color: var(--primary); }
+  .upload-status.ok      { background: #E8F5E9; color: #2E7D32; }
+  .upload-status.err     { background: #FFEBEE; color: var(--red); }
+
+  .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px; margin-top: 14px;
+  }
+  @media (max-width: 560px) { .preview-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .thumb {
+    aspect-ratio: 1; border-radius: 8px; overflow: hidden;
+    position: relative; background: #eee;
+    border: 2px solid var(--green);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .th-num {
+    position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.55); color: #fff;
+    font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px;
+  }
+
+  .speed-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+  .speed-row label { margin: 0; text-transform: none; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .speed-row input[type=range] { flex: 1; min-width: 80px; accent-color: var(--primary); }
+  .speed-val { font-weight: 800; color: var(--primary); min-width: 36px; }
+
+  .btn {
+    padding: 13px 28px; border: none; border-radius: 9px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: opacity .2s, transform .12s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 3px 10px rgba(66,133,244,.35); }
+  .btn-gray    { background: #F1F3F4; color: #555; }
+
+  .progress-wrap { margin-top: 16px; display: none; }
+  .progress-bg   { background: #E8F0FE; border-radius: 99px; height: 9px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #1a56c4); border-radius: 99px; transition: width .3s; width: 0%; }
+  .progress-lbl  { font-size: 12px; color: var(--muted); margin-top: 6px; text-align: center; }
+
+  .gif-result {
+    display: none; margin-top: 22px; padding: 24px;
+    background: linear-gradient(135deg, #E8F5E9, #EEF4FF);
+    border: 2px solid #A8C8F0; border-radius: var(--radius); text-align: center;
+  }
+  .gif-result img {
+    max-width: 220px; border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.15);
+    display: block; margin: 0 auto 14px;
+  }
+  .gif-info { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+
+  .btn-save {
+    background: linear-gradient(135deg, var(--green), #1e8c3a);
+    color: #fff; font-size: 17px; padding: 15px 38px;
+    border-radius: 11px; border: none; cursor: pointer; font-weight: 800;
+    box-shadow: 0 4px 16px rgba(52,168,83,.45);
+    transition: transform .12s, box-shadow .2s;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .btn-save:hover { transform: translateY(-2px); }
+  .btn-save:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  .success-box {
+    display: none; margin-top: 18px; padding: 22px;
+    background: #E8F5E9; border: 2px solid #81C784; border-radius: 12px; text-align: center;
+  }
+  .success-box .s-emoji { font-size: 48px; }
+  .success-box h3 { color: #2E7D32; margin: 10px 0 6px; font-size: 20px; }
+  .success-box p  { color: #555; font-size: 14px; }
+
+  #toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 11px 22px;
+    border-radius: 8px; font-size: 14px; font-weight: 600;
+    opacity: 0; pointer-events: none; transition: opacity .3s;
+    z-index: 999; max-width: 90vw; text-align: center;
+  }
+  #toast.show { opacity: 1; }
+  #toast.ok  { background: var(--green); }
+  #toast.err { background: var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="emoji">🎨</div>
+  <div>
+    <h1>¡Crea tu GIF animado!</h1>
+    <p>Sube 16 fotos o toma 8 fotos con tu cámara</p>
+  </div>
+</header>
+
+<main>
+
+<!-- PANTALLA 1 — INSTRUCCIONES -->
+<div class="screen active" id="screenInstrucciones">
+  <div class="instrucciones">
+    <div class="instr-hero">
+      <span class="big-emoji">📸✨</span>
+      <h2>¡Bienvenido/a!</h2>
+      <p>Puedes subir 16 fotos de tu galería<br>o tomar 8 fotos con tu cámara</p>
+    </div>
+    <div class="instr-body">
+      <h3>📋 ¿Cómo funciona?</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Escribe tu nombre y grado</strong><span>Así tu profe sabe que es tu trabajo.</span></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Elige cómo hacer tu GIF</strong><span>Subir 16 fotos O tomar 8 fotos con la cámara.</span></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Toma tus fotos en orden</strong><span>¡Sonríe! Las fotos se guardarán en el orden que las tomes.</span></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Toca "Generar GIF" y luego "Guardar"</strong><span>Tu profe podrá verlo en la galería.</span></div></div>
+      </div>
+      <div class="tip-box"><div class="tip-icon">💡</div><p><strong>¡Consejo!</strong> Para tomar fotos, necesitas permitir el acceso a tu cámara. Toma las 8 fotos en orden para crear tu historia.</p></div>
+      <button class="btn-start" onclick="irAFormulario()">¡Entendido, vamos a crear mi GIF! 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA 2 — FORMULARIO -->
+<div class="screen" id="screenFormulario">
+
+  <div class="card">
+    <div class="card-title">👤 Tus datos</div>
+    <div class="form-row">
+      <div class="form-group"><label>Tu nombre completo</label><input type="text" id="studentName" placeholder="Ej: María González" maxlength="60"></div>
+      <div class="form-group"><label>Tu grado</label><select id="studentGrade"><option value="">— Seleccionar —</option><option>Docente</option><option>4°4</option><option>4°5</option><option>4°6</option><option>4°7</option></select></div>
+    </div>
+  </div>
+
+  <!-- Selector de modo -->
+  <div class="modo-selector">
+    <button class="modo-btn active" id="btnModoCamara" onclick="setModo('camara')">📸 Tomar 8 fotos</button>
+    <button class="modo-btn" id="btnModoUpload" onclick="setModo('upload')">🖼️ Subir 16 fotos</button>
+  </div>
+
+  <!-- MODO CÁMARA -->
+  <div class="camara-container" id="camaraContainer">
+    <div class="card">
+      <div class="card-title">📸 Toma 8 fotos (en orden)</div>
+      <video id="videoCamara" autoplay playsinline></video>
+      <div>
+        <button class="btn-camara" id="btnTomarFoto" onclick="tomarFoto()">📷 Tomar foto</button>
+        <button class="btn-camara btn-danger-camara" id="btnResetFotos" onclick="resetFotos()">🗑️ Reiniciar</button>
+      </div>
+      <div class="fotos-tomadas" id="fotosTomadas"></div>
+      <div class="contador-fotos" id="contadorFotos">📸 Fotos tomadas: 0 de 8</div>
+    </div>
+  </div>
+
+  <!-- MODO SUBIDA -->
+  <div class="upload-container" id="uploadContainer">
+    <div class="card">
+      <div class="card-title">🖼️ Sube tus 16 fotos de una sola vez</div>
+      <div class="upload-zone" id="uploadZone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <span class="uz-icon">📁</span>
+        <h3>Toca aquí para elegir tus fotos</h3>
+        <p>Selecciona las <strong>16 imágenes</strong> al mismo tiempo.<br>Recuerda nombrarlas: <strong>01.jpg, 02.jpg… 16.jpg</strong></p>
+        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">📂 Seleccionar fotos</button>
+        <input type="file" id="fileInput" accept="image/*" multiple onchange="onFilesSelected(event)">
+      </div>
+      <div class="upload-status" id="uploadStatus"></div>
+      <div class="preview-grid" id="previewGrid"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✨ Generar</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="btnCreate" onclick="createGif()">🎬 Generar GIF</button>
+      <button class="btn btn-gray" onclick="resetTodo()">🔄 Empezar de nuevo</button>
+    </div>
+    <div class="speed-row" id="speedRow">
+      <label>⏱ Velocidad por foto:</label>
+      <input type="range" id="gifSpeed" min="0.05" max="0.5" step="0.01" value="0.1" oninput="document.getElementById('speedVal').textContent = this.value + 's'">
+      <span class="speed-val" id="speedVal">0.1s</span>
+    </div>
+    <div class="progress-wrap" id="progressWrap"><div class="progress-bg"><div class="progress-fill" id="progressBar"></div></div><div class="progress-lbl" id="progressLabel">Procesando…</div></div>
+    <div class="gif-result" id="gifResult"><img id="gifImg" src=""><div class="gif-info" id="gifInfo"></div><button class="btn-save" id="btnSave" onclick="saveGif()">☁️ Guardar mi GIF</button><div class="success-box" id="successBox"><div class="s-emoji">🎉</div><h3>¡GIF guardado con éxito!</h3><p>Tu profe ya puede ver tu trabajo. ¡Buen trabajo!</p><div style="margin-top: 18px;"><a href="https://script.google.com/macros/s/AKfycbzYScFfkX2fqVbQKu_gzV_aTs0CuLdUKy8jRSHzon9a1hzZ3K82djLdfqRcNvJf7-SaKw/exec?page=galeria" target="_blank" style="display:inline-block; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; padding:10px 24px; border-radius:40px; text-decoration:none; font-weight:600; font-size:14px; box-shadow:0 4px 12px rgba(102,126,234,.4);">🎬 Ver todos los GIFs en la galería</a></div></div></div>
+  </div>
+
+  <div style="text-align:center; margin-top:4px;"><button class="btn btn-gray" style="font-size:13px; padding:8px 18px;" onclick="irAInstrucciones()">← Ver instrucciones de nuevo</button></div>
+</div>
+
+</main>
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  VARIABLES GLOBALES
+// ════════════════════════════════════════════
+var imageData = [];
+var gifDataUrl = null;
+var modoActual = 'camara'; // 'camara' o 'upload'
+var fotosCamara = []; // almacena las fotos tomadas (dataURLs)
+var streamCamara = null;
+
+// ════════════════════════════════════════════
+//  NAVEGACIÓN ENTRE PANTALLAS
+// ════════════════════════════════════════════
+function irAFormulario() {
+  document.getElementById('screenInstrucciones').classList.remove('active');
+  document.getElementById('screenFormulario').classList.add('active');
+  iniciarCamara();
+}
+function irAInstrucciones() {
+  document.getElementById('screenFormulario').classList.remove('active');
+  document.getElementById('screenInstrucciones').classList.add('active');
+  detenerCamara();
+}
+
+function setModo(modo) {
+  modoActual = modo;
+  var btnCamara = document.getElementById('btnModoCamara');
+  var btnUpload = document.getElementById('btnModoUpload');
+  var camaraContainer = document.getElementById('camaraContainer');
+  var uploadContainer = document.getElementById('uploadContainer');
+  var speedRow = document.getElementById('speedRow');
+  
+  if (modo === 'camara') {
+    btnCamara.classList.add('active');
+    btnUpload.classList.remove('active');
+    camaraContainer.classList.add('active');
+    uploadContainer.classList.remove('active');
+    speedRow.style.display = 'flex';
+    iniciarCamara();
+    // Ajustar velocidad para modo cámara (8 fotos a 0.05s)
+    var speedSlider = document.getElementById('gifSpeed');
+    speedSlider.value = '0.05';
+    document.getElementById('speedVal').textContent = '0.05s';
+  } else {
+    btnUpload.classList.add('active');
+    btnCamara.classList.remove('active');
+    uploadContainer.classList.add('active');
+    camaraContainer.classList.remove('active');
+    speedRow.style.display = 'flex';
+    detenerCamara();
+    var speedSliderUpload = document.getElementById('gifSpeed');
+    speedSliderUpload.value = '0.1';
+    document.getElementById('speedVal').textContent = '0.1s';
+  }
+}
+
+// ════════════════════════════════════════════
+//  CÁMARA
+// ════════════════════════════════════════════
+async function iniciarCamara() {
+  try {
+    if (streamCamara) {
+      streamCamara.getTracks().forEach(function(track) { track.stop(); });
+    }
+    var stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    streamCamara = stream;
+    var video = document.getElementById('videoCamara');
+    video.srcObject = stream;
+  } catch (err) {
+    toast('No se pudo acceder a la cámara. Usa la opción de subir fotos.', 'err');
+    setModo('upload');
+  }
+}
+
+function detenerCamara() {
+  if (streamCamara) {
+    streamCamara.getTracks().forEach(function(track) { track.stop(); });
+    streamCamara = null;
+  }
+}
+
+function tomarFoto() {
+  if (fotosCamara.length >= 8) {
+    toast('Ya tomaste 8 fotos. Reinicia para tomar más.', 'err');
+    return;
+  }
+  
+  var video = document.getElementById('videoCamara');
+  var canvas = document.createElement('canvas');
+  canvas.width = 200;
+  canvas.height = 200;
+  var ctx = canvas.getContext('2d');
+  // Dibujar el video (con espejo)
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  
+  fotosCamara.push(dataUrl);
+  actualizarVistaPreviaFotos();
+  toast('Foto ' + fotosCamara.length + ' de 8 tomada ✓', 'ok');
+}
+
+function actualizarVistaPreviaFotos() {
+  var contenedor = document.getElementById('fotosTomadas');
+  var contador = document.getElementById('contadorFotos');
+  contenedor.innerHTML = '';
+  fotosCamara.forEach(function(foto, idx) {
+    var img = document.createElement('img');
+    img.src = foto;
+    img.className = 'foto-preview';
+    img.onclick = function() { verFotoGrande(foto); };
+    var num = document.createElement('span');
+    num.style.position = 'relative';
+    num.style.marginLeft = '-20px';
+    num.style.background = '#4CAF50';
+    num.style.color = '#fff';
+    num.style.borderRadius = '10px';
+    num.style.padding = '1px 5px';
+    num.style.fontSize = '10px';
+    num.textContent = idx + 1;
+    var wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.appendChild(img);
+    wrapper.appendChild(num);
+    contenedor.appendChild(wrapper);
+  });
+  contador.textContent = '📸 Fotos tomadas: ' + fotosCamara.length + ' de 8';
+  
+  // Actualizar imageData para el GIF
+  imageData = fotosCamara.map(function(foto, i) {
+    return { name: 'foto_' + (i+1), dataUrl: foto };
+  });
+  
+  var btnGenerar = document.getElementById('btnCreate');
+  if (fotosCamara.length === 8) {
+    btnGenerar.disabled = false;
+    toast('¡Listo! Ya tienes 8 fotos. Ahora genera tu GIF.', 'ok');
+  } else {
+    btnGenerar.disabled = true;
+  }
+}
+
+function resetFotos() {
+  fotosCamara = [];
+  imageData = [];
+  gifDataUrl = null;
+  document.getElementById('fotosTomadas').innerHTML = '';
+  document.getElementById('contadorFotos').textContent = '📸 Fotos tomadas: 0 de 8';
+  document.getElementById('btnCreate').disabled = true;
+  document.getElementById('gifResult').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'none';
+  toast('Fotos reiniciadas. Puedes tomar nuevas fotos.', 'ok');
+}
+
+function verFotoGrande(dataUrl) {
+  toast('Foto capturada ✓', 'ok');
+}
+
+// ════════════════════════════════════════════
+//  SUBIDA DE ARCHIVOS (16 fotos)
+// ════════════════════════════════════════════
+function onDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('dragover'); }
+function onDragLeave() { document.getElementById('uploadZone').classList.remove('dragover'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('dragover');
+  procesarArchivosSubida(Array.from(e.dataTransfer.files));
+}
+function onFilesSelected(e) {
+  procesarArchivosSubida(Array.from(e.target.files));
+  e.target.value = '';
+}
+
+function procesarArchivosSubida(files) {
+  var imagenes = files.filter(function(f) { return f.type.startsWith('image/'); });
+  if (imagenes.length === 0) {
+    mostrarStatusUpload('err', '❌ No encontré imágenes.');
+    return;
+  }
+  if (imagenes.length !== 16) {
+    mostrarStatusUpload('err', '⚠️ Necesitas exactamente 16 imágenes. Seleccionaste ' + imagenes.length);
+    return;
+  }
+  
+  imagenes.sort(function(a, b) {
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
+  });
+  
+  imageData = [];
+  gifDataUrl = null;
+  document.getElementById('previewGrid').innerHTML = '';
+  document.getElementById('gifResult').style.display = 'none';
+  document.getElementById('successBox').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('btnSave').style.display = 'inline-flex';
+  mostrarStatusUpload('loading', '⏳ Cargando imágenes… 0 / 16');
+  
+  var idx = 0;
+  function procesarSiguiente() {
+    if (idx >= imagenes.length) {
+      mostrarStatusUpload('ok', '✅ ¡16 imágenes listas! Ya puedes generar tu GIF.');
+      document.getElementById('btnCreate').disabled = false;
+      return;
+    }
+    var file = imagenes[idx];
+    var orden = idx;
+    idx++;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 200;
+        var ctx = canvas.getContext('2d');
+        var sc = Math.max(200 / img.width, 200 / img.height);
+        var sw = 200 / sc, sh = 200 / sc;
+        ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, 200, 200);
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+        imageData[orden] = { name: file.name, dataUrl: dataUrl };
+        agregarThumb(orden, dataUrl, file.name);
+        mostrarStatusUpload('loading', '⏳ Cargando… ' + imageData.filter(Boolean).length + ' / 16');
+        setTimeout(procesarSiguiente, 30);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  procesarSiguiente();
+}
+
+function agregarThumb(idx, dataUrl, nombre) {
+  var grid = document.getElementById('previewGrid');
+  var thumb = document.createElement('div');
+  thumb.className = 'thumb';
+  thumb.innerHTML = '<img src="' + dataUrl + '" alt="' + nombre + '"><span class="th-num">' + (idx + 1) + '</span>';
+  grid.appendChild(thumb);
+}
+
+function mostrarStatusUpload(tipo, msg) {
+  var el = document.getElementById('uploadStatus');
+  el.style.display = 'block';
+  el.className = 'upload-status ' + tipo;
+  el.textContent = msg;
+}
+
+// ════════════════════════════════════════════
+//  GENERAR GIF
+// ════════════════════════════════════════════
+function createGif() {
+  var name = document.getElementById('studentName').value.trim();
+  var grade = document.getElementById('studentGrade').value;
+  if (!name) { toast('Escribe tu nombre primero', 'err'); return; }
+  if (!grade) { toast('Selecciona tu grado', 'err'); return; }
+  
+  var fotosValidas = imageData.filter(Boolean);
+  var totalFrames = fotosValidas.length;
+  
+  if (modoActual === 'camara' && totalFrames !== 8) {
+    toast('Toma las 8 fotos primero', 'err'); return;
+  }
+  if (modoActual === 'upload' && totalFrames !== 16) {
+    toast('Sube las 16 imágenes primero', 'err'); return;
+  }
+  
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('gifResult').style.display = 'none';
+  document.getElementById('successBox').style.display = 'none';
+  document.getElementById('btnCreate').disabled = true;
+  gifDataUrl = null;
+  setProgress(10, 'Preparando…');
+  
+  var frames = fotosValidas.map(function(d) { return d.dataUrl; });
+  var interval = parseFloat(document.getElementById('gifSpeed').value) || 0.1;
+  
+  setTimeout(function() {
+    setProgress(20, 'Generando GIF…');
+    gifshot.createGIF({
+      images: frames,
+      gifWidth: 200,
+      gifHeight: 200,
+      interval: interval,
+      numWorkers: 2,
+      progressCallback: function(p) {
+        setProgress(20 + Math.round(p * 75), 'Creando GIF… ' + Math.round(p * 100) + '%');
+      }
+    }, function(obj) {
+      document.getElementById('btnCreate').disabled = false;
+      if (obj.error) {
+        document.getElementById('progressWrap').style.display = 'none';
+        toast('Error al crear el GIF 😢', 'err');
+        return;
+      }
+      gifDataUrl = obj.image;
+      setProgress(100, '¡GIF listo!');
+      document.getElementById('gifImg').src = gifDataUrl;
+      var bytes = Math.round((gifDataUrl.length * 3) / 4);
+      document.getElementById('gifInfo').textContent = '📦 Tamaño: ~' + (bytes > 1048576 ? (bytes / 1048576).toFixed(1) + ' MB' : (bytes / 1024).toFixed(0) + ' KB');
+      document.getElementById('btnSave').disabled = false;
+      document.getElementById('gifResult').style.display = 'block';
+      toast('¡GIF listo! Guárdalo 👇', 'ok');
+    });
+  }, 80);
+}
+
+function saveGif() {
+  if (!gifDataUrl) return;
+  var name = document.getElementById('studentName').value.trim();
+  var grade = document.getElementById('studentGrade').value;
+  document.getElementById('btnSave').disabled = true;
+  setProgress(10, 'Guardando en Drive…');
+  document.getElementById('progressWrap').style.display = 'block';
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        setProgress(100, '¡Guardado!');
+        document.getElementById('successBox').style.display = 'block';
+        document.getElementById('btnSave').style.display = 'none';
+        toast('¡GIF guardado!', 'ok');
+      } else {
+        toast('Error al guardar: ' + result.error, 'err');
+        document.getElementById('btnSave').disabled = false;
+      }
+    })
+    .withFailureHandler(function(err) {
+      toast('Error: ' + err.message, 'err');
+      document.getElementById('btnSave').disabled = false;
+    })
+    .saveStudentGif(name, grade, gifDataUrl);
+}
+
+function resetTodo() {
+  imageData = [];
+  gifDataUrl = null;
+  fotosCamara = [];
+  document.getElementById('studentName').value = '';
+  document.getElementById('studentGrade').value = '';
+  document.getElementById('previewGrid').innerHTML = '';
+  document.getElementById('uploadStatus').style.display = 'none';
+  document.getElementById('gifResult').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('successBox').style.display = 'none';
+  document.getElementById('btnSave').disabled = false;
+  document.getElementById('btnSave').style.display = 'inline-flex';
+  document.getElementById('fotosTomadas').innerHTML = '';
+  document.getElementById('contadorFotos').textContent = '📸 Fotos tomadas: 0 de 8';
+  document.getElementById('btnCreate').disabled = true;
+  toast('Todo reiniciado ✓');
+}
+
+function setProgress(pct, label) {
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = label;
+}
+
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  setTimeout(function() { el.className = ''; }, 3500);
+}
+</script>
+</body>
+</html>
