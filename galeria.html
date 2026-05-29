@@ -5,181 +5,471 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎨 Galería de GIFs</title>
 <style>
-  :root { --p1:#667eea;--p2:#764ba2;--card:#fff;--bg:#f0f0ff; }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Google Sans',Segoe UI,sans-serif;background:var(--bg);background-image:radial-gradient(circle at 20% 20%,#e0d7ff 0%,transparent 50%),radial-gradient(circle at 80% 80%,#d7f0ff 0%,transparent 50%);min-height:100vh;}
-  header{background:linear-gradient(135deg,var(--p1),var(--p2));padding:20px 24px 28px;text-align:center;color:#fff;position:relative;overflow:hidden;}
-  header::before{content:'🌟✨🎨🌈🎬🎉🦄🚀';position:absolute;top:6px;left:0;right:0;font-size:18px;letter-spacing:12px;opacity:.25;white-space:nowrap;overflow:hidden;}
-  header .big{font-size:42px;display:block;margin-bottom:5px;}
-  header h1{font-size:24px;font-weight:800;text-shadow:0 2px 8px rgba(0,0,0,.2);}
-  header p{font-size:13px;opacity:.88;margin-top:4px;}
-  .search-wrap{max-width:800px;margin:-18px auto 0;padding:0 16px;position:relative;z-index:10;}
-  .search-box{display:flex;gap:8px;flex-wrap:wrap;background:#fff;border-radius:50px;padding:8px 16px;box-shadow:0 6px 24px rgba(102,126,234,.25);}
-  .search-box input,.search-box select{border:none;outline:none;font-size:14px;flex:1;min-width:120px;background:transparent;}
-  .search-box .sep{color:#ddd;font-size:20px;align-self:center;}
-  .emoji-filters{max-width:800px;margin:12px auto 0;padding:0 16px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
-  .ef-btn{background:#fff;border:2px solid #e0e0ff;border-radius:50px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s;color:#555;}
-  .ef-btn:hover,.ef-btn.active{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border-color:transparent;transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.35);}
-  .count-bar{max-width:800px;margin:10px auto 0;padding:0 20px;font-size:12px;color:#888;}
-  .count-bar span{font-weight:700;color:var(--p1);}
-  .grid{max-width:1100px;margin:16px auto 50px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;padding:0 16px;}
-  @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr);gap:12px;}}
-  @media(min-width:900px){.grid{grid-template-columns:repeat(5,1fr);}}
-  .card{background:var(--card);border-radius:14px;box-shadow:0 4px 12px rgba(102,126,234,.12);overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;border:2px solid transparent;}
-  .card:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 10px 24px rgba(102,126,234,.2);border-color:#c5b8ff;}
-  .card-thumb{width:100%;aspect-ratio:1;position:relative;overflow:hidden;background:linear-gradient(135deg,#f0eeff,#e8f4ff);}
-  .card-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
-  .card:hover .card-thumb img{transform:scale(1.05);}
-  .card-badge{position:absolute;top:6px;left:6px;background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;}
-  .card-info{padding:8px 10px 6px;}
-  .card-name{font-weight:800;font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .card-grade{display:inline-block;margin-top:3px;background:#EEF3FF;color:var(--p1);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;}
-  .reactions{padding:6px 8px 10px;display:flex;gap:4px;flex-wrap:wrap;border-top:1px solid #f0f0f8;}
-  .reaction-btn{background:#F4F4FF;border:1.5px solid #e8e8ff;border-radius:50px;padding:3px 8px;font-size:13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:3px;font-family:inherit;}
-  .reaction-btn:hover{background:#EEF3FF;border-color:#c5b8ff;transform:scale(1.08);}
-  .reaction-btn.reacted{background:linear-gradient(135deg,#EEF3FF,#F4EEFF);border-color:var(--p1);box-shadow:0 2px 6px rgba(102,126,234,.2);}
-  .reaction-btn .r-count{font-size:10px;font-weight:800;color:var(--p1);min-width:12px;}
-  #loading{text-align:center;padding:60px 20px;font-size:18px;color:#888;}
-  .loading-spinner{display:inline-block;width:40px;height:40px;border:4px solid #e0d7ff;border-top-color:var(--p1);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:#aaa;}
-  .empty .e-emoji{font-size:48px;display:block;margin-bottom:10px;}
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,10,50,.85);z-index:200;align-items:center;justify-content:center;padding:16px;}
-  .modal-overlay.open{display:flex;}
-  .modal{background:#fff;border-radius:20px;padding:0;max-width:400px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:popIn .2s ease;}
-  @keyframes popIn{from{transform:scale(.9);opacity:0;}to{transform:scale(1);opacity:1;}}
-  .modal-img-wrap{position:relative;background:#f0eeff;}
-  .modal-img-wrap img{width:100%;aspect-ratio:1;object-fit:contain;display:block;max-height:300px;}
-  .modal-close{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);}
-  .modal-body{padding:16px 20px 20px;}
-  .modal-name{font-size:18px;font-weight:800;}
-  .modal-grade{display:inline-block;margin-top:5px;background:#EEF3FF;color:var(--p1);font-size:12px;font-weight:700;padding:3px 12px;border-radius:99px;}
-  .modal-reactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-  .modal-reaction-btn{background:#F4F4FF;border:2px solid #e8e8ff;border-radius:50px;padding:6px 14px;font-size:16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;font-family:inherit;}
-  .modal-reaction-btn:hover{transform:scale(1.1);background:#EEF3FF;}
-  .modal-reaction-btn.reacted{background:linear-gradient(135deg,#EEF3FF,#F4EEFF);border-color:var(--p1);box-shadow:0 2px 8px rgba(102,126,234,.25);}
-  .modal-reaction-btn .r-count{font-size:12px;font-weight:800;color:var(--p1);}
-  .modal-drive-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:10px;background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:13px;transition:opacity .2s;}
-  .modal-drive-link:hover{opacity:.88;}
-  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap;max-width:90vw;text-align:center;box-shadow:0 6px 20px rgba(102,126,234,.4);}
-  #toast.show{opacity:1;}
-  .burst{pointer-events:none;position:fixed;z-index:999;font-size:20px;animation:burst .7s ease forwards;}
-  @keyframes burst{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1.5);}}
+  :root {
+    --p1: #667eea; --p2: #764ba2;
+    --green: #34A853; --yellow: #FBBC05;
+    --card: #fff; --bg: #f0f0ff;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Google Sans', Segoe UI, sans-serif;
+    background: var(--bg);
+    background-image: radial-gradient(circle at 20% 20%, #e0d7ff 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, #d7f0ff 0%, transparent 50%);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--p1), var(--p2));
+    padding: 20px 24px 28px;
+    text-align: center; color: #fff;
+    position: relative; overflow: hidden;
+  }
+  header::before {
+    content: '🌟✨🎨🌈🎬🎉🦄🚀';
+    position: absolute; top: 6px; left: 0; right: 0;
+    font-size: 18px; letter-spacing: 12px; opacity: .25;
+    white-space: nowrap; overflow: hidden;
+  }
+  header .big { font-size: 42px; display: block; margin-bottom: 5px; }
+  header h1 { font-size: 24px; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  header p  { font-size: 13px; opacity: .88; margin-top: 4px; }
+
+  .search-wrap {
+    max-width: 800px; margin: -18px auto 0; padding: 0 16px;
+    position: relative; z-index: 10;
+  }
+  .search-box {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    background: #fff; border-radius: 50px;
+    padding: 8px 16px;
+    box-shadow: 0 6px 24px rgba(102,126,234,.25);
+  }
+  .search-box input, .search-box select {
+    border: none; outline: none; font-size: 14px;
+    flex: 1; min-width: 120px; background: transparent;
+  }
+  .search-box .sep { color: #ddd; font-size: 20px; align-self: center; }
+
+  .emoji-filters {
+    max-width: 800px; margin: 12px auto 0; padding: 0 16px;
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+  }
+  .ef-btn {
+    background: #fff; border: 2px solid #e0e0ff;
+    border-radius: 50px; padding: 5px 12px;
+    font-size: 12px; cursor: pointer; font-weight: 600;
+    transition: all .2s; color: #555;
+  }
+  .ef-btn:hover, .ef-btn.active {
+    background: linear-gradient(135deg, var(--p1), var(--p2));
+    color: #fff; border-color: transparent;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102,126,234,.35);
+  }
+
+  .count-bar {
+    max-width: 800px; margin: 10px auto 0; padding: 0 20px;
+    font-size: 12px; color: #888;
+  }
+  .count-bar span { font-weight: 700; color: var(--p1); }
+
+  .grid {
+    max-width: 1100px; margin: 16px auto 50px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px; padding: 0 16px;
+  }
+  @media (max-width: 600px) { 
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  }
+  @media (min-width: 900px) { 
+    .grid { grid-template-columns: repeat(5, 1fr); }
+  }
+
+  .card {
+    background: var(--card); border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(102,126,234,.12);
+    overflow: hidden; cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+    border: 2px solid transparent;
+  }
+  .card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 10px 24px rgba(102,126,234,.2);
+    border-color: #c5b8ff;
+  }
+
+  .card-thumb {
+    width: 100%; aspect-ratio: 1; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #f0eeff, #e8f4ff);
+  }
+  .card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
+  .card:hover .card-thumb img { transform: scale(1.05); }
+
+  .card-badge {
+    position: absolute; top: 6px; left: 6px;
+    background: linear-gradient(135deg, var(--p1), var(--p2));
+    color: #fff; font-size: 9px; font-weight: 800;
+    padding: 2px 7px; border-radius: 99px;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+
+  .card-info { padding: 8px 10px 6px; }
+  .card-name  { font-weight: 800; font-size: 12px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-grade {
+    display: inline-block; margin-top: 3px;
+    background: #EEF3FF; color: var(--p1);
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 99px;
+  }
+
+  .reactions {
+    padding: 6px 8px 10px;
+    display: flex; gap: 4px; flex-wrap: wrap;
+    border-top: 1px solid #f0f0f8;
+  }
+  .reaction-btn {
+    background: #F4F4FF; border: 1.5px solid #e8e8ff;
+    border-radius: 50px; padding: 3px 8px;
+    font-size: 13px; cursor: pointer;
+    transition: all .15s; display: flex; align-items: center; gap: 3px;
+    font-family: inherit;
+  }
+  .reaction-btn:hover { background: #EEF3FF; border-color: #c5b8ff; transform: scale(1.08); }
+  .reaction-btn.reacted {
+    background: linear-gradient(135deg, #EEF3FF, #F4EEFF);
+    border-color: var(--p1);
+    box-shadow: 0 2px 6px rgba(102,126,234,.2);
+  }
+  .reaction-btn .r-count { font-size: 10px; font-weight: 800; color: var(--p1); min-width: 12px; }
+
+  #loading { text-align: center; padding: 60px 20px; font-size: 18px; color: #888; }
+  .loading-spinner {
+    display: inline-block; width: 40px; height: 40px;
+    border: 4px solid #e0d7ff; border-top-color: var(--p1);
+    border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: #aaa; }
+  .empty .e-emoji { font-size: 48px; display: block; margin-bottom: 10px; }
+  .empty p { font-size: 15px; }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(20,10,50,.85); z-index: 200;
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 20px; padding: 0; max-width: 400px; width: 100%;
+    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.4); animation: popIn .2s ease;
+  }
+  @keyframes popIn { from { transform: scale(.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .modal-img-wrap { position: relative; background: #f0eeff; }
+  .modal-img-wrap img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; max-height: 300px; }
+  .modal-close {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(255,255,255,.9); border: none; border-radius: 50%;
+    width: 32px; height: 32px; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+
+  .modal-body { padding: 16px 20px 20px; }
+  .modal-name  { font-size: 18px; font-weight: 800; }
+  .modal-grade {
+    display: inline-block; margin-top: 5px;
+    background: #EEF3FF; color: var(--p1);
+    font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 99px;
+  }
+  .modal-reactions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .modal-reaction-btn {
+    background: #F4F4FF; border: 2px solid #e8e8ff; border-radius: 50px; padding: 6px 14px;
+    font-size: 16px; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 5px; font-family: inherit;
+  }
+  .modal-reaction-btn:hover { transform: scale(1.1); background: #EEF3FF; }
+  .modal-reaction-btn.reacted { background: linear-gradient(135deg, #EEF3FF, #F4EEFF); border-color: var(--p1); box-shadow: 0 2px 8px rgba(102,126,234,.25); }
+  .modal-reaction-btn .r-count { font-size: 12px; font-weight: 800; color: var(--p1); }
+
+  .modal-drive-link {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 14px; padding: 10px;
+    background: linear-gradient(135deg, var(--p1), var(--p2));
+    color: #fff; border-radius: 12px; text-decoration: none;
+    font-weight: 700; font-size: 13px; transition: opacity .2s;
+  }
+  .modal-drive-link:hover { opacity: .88; }
+
+  #toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--p1), var(--p2));
+    color: #fff; padding: 10px 20px; border-radius: 50px;
+    font-size: 13px; font-weight: 700;
+    opacity: 0; pointer-events: none; transition: opacity .3s;
+    z-index: 999; white-space: nowrap; max-width: 90vw; text-align: center;
+    box-shadow: 0 6px 20px rgba(102,126,234,.4);
+  }
+  #toast.show { opacity: 1; }
+
+  .burst {
+    pointer-events: none; position: fixed; z-index: 999; font-size: 20px;
+    animation: burst .7s ease forwards;
+  }
+  @keyframes burst {
+    0%   { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(1.5); }
+  }
 </style>
 </head>
 <body>
+
 <header>
   <span class="big">🎨</span>
   <h1>Galería de GIFs</h1>
   <p>¡Mira los trabajos de todos y deja tus reacciones!</p>
 </header>
+
 <div class="search-wrap">
   <div class="search-box">
     <span>🔍</span>
     <input type="text" id="searchInput" placeholder="Buscar por nombre…" oninput="filtrar()">
     <span class="sep">|</span>
-    <select id="gradeFilter" onchange="filtrar()"><option value="">Todos los grados</option></select>
+    <select id="gradeFilter" onchange="filtrar()">
+      <option value="">Todos los grados</option>
+    </select>
   </div>
 </div>
-<div class="emoji-filters">
-  <button class="ef-btn active" onclick="filtrarEmoji(this,'')">🌟 Todos</button>
-  <button class="ef-btn" onclick="filtrarEmoji(this,'❤️')">❤️ Más amados</button>
-  <button class="ef-btn" onclick="filtrarEmoji(this,'🔥')">🔥 Los más top</button>
-  <button class="ef-btn" onclick="filtrarEmoji(this,'😂')">😂 Los más graciosos</button>
-  <button class="ef-btn" onclick="filtrarEmoji(this,'👏')">👏 Aplaudidos</button>
-  <button class="ef-btn" onclick="filtrarEmoji(this,'😮')">😮 Sorprendentes</button>
+
+<div class="emoji-filters" id="emojiFilters">
+  <button class="ef-btn active" data-emoji="" onclick="filtrarEmoji(this, '')">🌟 Todos</button>
+  <button class="ef-btn" data-emoji="❤️" onclick="filtrarEmoji(this, '❤️')">❤️ Más amados</button>
+  <button class="ef-btn" data-emoji="🔥" onclick="filtrarEmoji(this, '🔥')">🔥 Los más top</button>
+  <button class="ef-btn" data-emoji="😂" onclick="filtrarEmoji(this, '😂')">😂 Los más graciosos</button>
+  <button class="ef-btn" data-emoji="👏" onclick="filtrarEmoji(this, '👏')">👏 Aplaudidos</button>
+  <button class="ef-btn" data-emoji="😮" onclick="filtrarEmoji(this, '😮')">😮 Sorprendentes</button>
 </div>
+
 <div class="count-bar" id="countBar"></div>
-<div id="loading"><div class="loading-spinner"></div><br>Cargando GIFs…</div>
+
+<div id="loading">
+  <div class="loading-spinner"></div><br>
+  Cargando GIFs…
+</div>
 <div class="grid" id="grid" style="display:none;"></div>
+
 <div class="modal-overlay" id="modal" onclick="cerrarModal(event)">
   <div class="modal">
-    <div class="modal-img-wrap"><img id="modalImg" src="" alt="GIF"><button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button></div>
+    <div class="modal-img-wrap">
+      <img id="modalImg" src="" alt="GIF">
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    </div>
     <div class="modal-body">
       <div class="modal-name" id="modalName"></div>
       <span class="modal-grade" id="modalGrade"></span>
       <div class="modal-reactions" id="modalReactions"></div>
-      <a id="modalDriveLink" class="modal-drive-link" href="#" target="_blank">📁 Ver GIF completo en Drive</a>
+      <a id="modalDriveLink" class="modal-drive-link" href="#" target="_blank">
+        📁 Ver GIF completo en Drive
+      </a>
     </div>
   </div>
 </div>
+
 <div id="toast"></div>
+
 <script>
-var API_URL='https://script.google.com/macros/s/AKfycbzYScFfkX2fqVbQKu_gzV_aTs0CuLdUKy8jRSHzon9a1hzZ3K82djLdfqRcNvJf7-SaKw/exec';
-function apiGet(action){
-  return fetch(API_URL+'?action='+action, {redirect:'follow'})
-    .then(function(r){ return r.text(); })
-    .then(function(t){ try{ return JSON.parse(t); }catch(e){ return null; } })
-    .catch(function(){ return null; });
-}
-function apiPost(body){return fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).catch(function(){return null;});}
+var API_URL = 'https://script.google.com/macros/s/AKfycbzYScFfkX2fqVbQKu_gzV_aTs0CuLdUKy8jRSHzon9a1hzZ3K82djLdfqRcNvJf7-SaKw/exec';
 
-var EMOJIS=['❤️','🔥','😂','👏','😮'];
-var allStudents=[],allReactions={},myReactions=JSON.parse(localStorage.getItem('myReactions')||'{}'),activeEmoji='';
+var EMOJIS = ['❤️','🔥','😂','👏','😮'];
+var allStudents  = [];
+var allReactions = {};
+var myReactions  = JSON.parse(localStorage.getItem('myReactions') || '{}');
+var activeEmoji  = '';
 
-apiGet('getStudents').then(function(data){
-  allStudents=data||[];
-  var grades=[];allStudents.forEach(function(s){if(grades.indexOf(s.grade)===-1)grades.push(s.grade);});grades.sort();
-  var sel=document.getElementById('gradeFilter');
-  grades.forEach(function(g){var o=document.createElement('option');o.value=o.textContent=g;sel.appendChild(o);});
-  apiGet('getReactions').then(function(reacts){
-    allReactions=reacts||{};
-    document.getElementById('loading').style.display='none';
-    document.getElementById('grid').style.display='grid';
-    renderGrid(allStudents);
+// ── Cargar datos ────────────────────────────────────────────
+fetch(API_URL + '?action=getStudents')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    allStudents = data || [];
+    var grades = [...new Set(allStudents.map(function(s) { return s.grade; }))].sort();
+    var sel = document.getElementById('gradeFilter');
+    grades.forEach(function(g) {
+      var o = document.createElement('option'); o.value = o.textContent = g; sel.appendChild(o);
+    });
+    cargarReacciones();
+  })
+  .catch(function() {
+    document.getElementById('loading').innerHTML = '😢 No se pudieron cargar los GIFs.';
   });
-}).catch(function(){document.getElementById('loading').innerHTML='😢 No se pudieron cargar los GIFs.';});
 
-function renderGrid(students){
-  var grid=document.getElementById('grid');grid.innerHTML='';
-  if(!students.length){grid.innerHTML='<div class="empty"><span class="e-emoji">🎭</span><p>Aún no hay GIFs. ¡Crea el tuyo!</p></div>';document.getElementById('countBar').innerHTML='';return;}
-  document.getElementById('countBar').innerHTML='Mostrando <span>'+students.length+'</span> GIF'+(students.length!==1?'s':'');
-  students.forEach(function(s){
-    var thumb=s.fileId?'https://drive.google.com/thumbnail?id='+s.fileId+'&sz=w200':'';
-    var reacts=allReactions[s.fileId]||{};
-    var totalR=EMOJIS.reduce(function(a,e){return a+(reacts[e]||0);},0);
-    var card=document.createElement('div');card.className='card';
-    var reactBtns=EMOJIS.map(function(em){var cnt=reacts[em]||0,reacted=myReactions[s.fileId]===em?' reacted':'';return '<button class="reaction-btn'+reacted+'" onclick="reaccionar(event,\''+s.fileId+'\',\''+em+'\')">'+em+'<span class="r-count">'+(cnt>0?cnt:'')+'</span></button>';}).join('');
-    card.innerHTML='<div class="card-thumb"><img src="'+thumb+'" loading="lazy" onerror="this.src=\'https://placehold.co/200/667eea/white?text=GIF\'"><span class="card-badge">'+(totalR>0?totalR+' reacciones':'GIF animado')+'</span></div><div class="card-info"><div class="card-name">✨ '+s.name+'</div><span class="card-grade">📚 '+s.grade+'</span></div><div class="reactions">'+reactBtns+'</div>';
-    card.querySelector('.card-thumb').addEventListener('click',function(){abrirModal(s);});
-    card.querySelector('.card-info').addEventListener('click',function(){abrirModal(s);});
+function cargarReacciones() {
+  fetch(API_URL + '?action=getReactions')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      allReactions = data || {};
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('grid').style.display = 'grid';
+      renderGrid(allStudents);
+    })
+    .catch(function() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('grid').style.display = 'grid';
+      renderGrid(allStudents);
+    });
+}
+
+// ── Render grid ─────────────────────────────────────────────
+function renderGrid(students) {
+  var grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  if (!students.length) {
+    grid.innerHTML = '<div class="empty"><span class="e-emoji">🎭</span><p>Aún no hay GIFs. ¡Crea el tuyo!</p></div>';
+    document.getElementById('countBar').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('countBar').innerHTML =
+    'Mostrando <span>' + students.length + '</span> GIF' + (students.length !== 1 ? 's' : '');
+
+  students.forEach(function(s) {
+    var thumb   = s.fileId ? 'https://drive.google.com/thumbnail?id=' + s.fileId + '&sz=w200' : '';
+    var reacts  = allReactions[s.fileId] || {};
+    var totalR  = EMOJIS.reduce(function(a, e) { return a + (reacts[e] || 0); }, 0);
+
+    var card = document.createElement('div');
+    card.className = 'card';
+
+    var reactBtns = EMOJIS.map(function(em) {
+      var cnt     = reacts[em] || 0;
+      var reacted = myReactions[s.fileId] === em ? ' reacted' : '';
+      return '<button class="reaction-btn' + reacted + '" data-fileid="' + s.fileId + '" data-emoji="' + em + '" onclick="reaccionar(event,\'' + s.fileId + '\',\'' + em + '\')">' +
+               em + '<span class="r-count">' + (cnt > 0 ? cnt : '') + '</span>' +
+             '</button>';
+    }).join('');
+
+    card.innerHTML =
+      '<div class="card-thumb">' +
+        '<img src="' + thumb + '" alt="GIF de ' + s.name + '" loading="lazy" onerror="this.src=\'https://placehold.co/200/667eea/white?text=GIF\'">' +
+        '<span class="card-badge">' + (totalR > 0 ? totalR + ' reacciones' : 'GIF animado') + '</span>' +
+      '</div>' +
+      '<div class="card-info">' +
+        '<div class="card-name">✨ ' + s.name + '</div>' +
+        '<span class="card-grade">📚 ' + s.grade + '</span>' +
+      '</div>' +
+      '<div class="reactions">' + reactBtns + '</div>';
+
+    card.querySelector('.card-thumb').addEventListener('click', function() { abrirModal(s); });
+    card.querySelector('.card-info').addEventListener('click',  function() { abrirModal(s); });
     grid.appendChild(card);
   });
 }
 
-function reaccionar(e,fileId,emoji){
+// ── Reacciones ───────────────────────────────────────────────
+function reaccionar(e, fileId, emoji) {
   e.stopPropagation();
-  if(!allReactions[fileId])allReactions[fileId]={};
-  var ya=myReactions[fileId];
-  if(ya===emoji){allReactions[fileId][emoji]=Math.max(0,(allReactions[fileId][emoji]||1)-1);delete myReactions[fileId];}
-  else{if(ya)allReactions[fileId][ya]=Math.max(0,(allReactions[fileId][ya]||1)-1);allReactions[fileId][emoji]=(allReactions[fileId][emoji]||0)+1;myReactions[fileId]=emoji;apiPost({action:'addReaction',fileId:fileId,emoji:emoji});lanzarBurst(e,emoji);toast('¡Reaccionaste con '+emoji+'!');}
-  localStorage.setItem('myReactions',JSON.stringify(myReactions));filtrar();
+
+  if (!allReactions[fileId]) allReactions[fileId] = {};
+
+  var yaReaccione = myReactions[fileId];
+
+  if (yaReaccione === emoji) {
+    allReactions[fileId][emoji] = Math.max(0, (allReactions[fileId][emoji] || 1) - 1);
+    delete myReactions[fileId];
+  } else {
+    if (yaReaccione) {
+      allReactions[fileId][yaReaccione] = Math.max(0, (allReactions[fileId][yaReaccione] || 1) - 1);
+    }
+    allReactions[fileId][emoji] = (allReactions[fileId][emoji] || 0) + 1;
+    myReactions[fileId] = emoji;
+    fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'addReaction', fileId: fileId, emoji: emoji })
+    });
+    lanzarBurst(e, emoji);
+    toast('¡Reaccionaste con ' + emoji + '!');
+  }
+
+  localStorage.setItem('myReactions', JSON.stringify(myReactions));
+  filtrar();
 }
 
-function lanzarBurst(e,emoji){
-  var rect=e.target.getBoundingClientRect();
-  for(var i=0;i<5;i++){var el=document.createElement('div');el.className='burst';el.textContent=emoji;el.style.left=rect.left+rect.width/2+'px';el.style.top=rect.top+rect.height/2+'px';el.style.setProperty('--tx',(Math.random()*80-40)+'px');el.style.setProperty('--ty',(Math.random()*-60-20)+'px');el.style.animationDelay=(i*0.08)+'s';document.body.appendChild(el);setTimeout(function(){el.remove();},900);}
+function lanzarBurst(e, emoji) {
+  var rect = e.target.getBoundingClientRect();
+  for (var i = 0; i < 5; i++) {
+    var el  = document.createElement('div');
+    el.className = 'burst';
+    el.textContent = emoji;
+    el.style.left  = rect.left + rect.width / 2 + 'px';
+    el.style.top   = rect.top  + rect.height / 2 + 'px';
+    el.style.setProperty('--tx', (Math.random() * 80 - 40) + 'px');
+    el.style.setProperty('--ty', (Math.random() * -60 - 20) + 'px');
+    el.style.animationDelay = (i * 0.08) + 's';
+    document.body.appendChild(el);
+    setTimeout(function() { el.remove(); }, 900);
+  }
 }
 
-function abrirModal(s){
-  document.getElementById('modalImg').src=s.fileId?'https://drive.google.com/uc?export=view&id='+s.fileId:s.url;
-  document.getElementById('modalName').textContent=s.name;
-  document.getElementById('modalGrade').textContent='📚 '+s.grade;
-  document.getElementById('modalDriveLink').href=s.url;
-  var reacts=allReactions[s.fileId]||{};
-  document.getElementById('modalReactions').innerHTML=EMOJIS.map(function(em){var cnt=reacts[em]||0,reacted=myReactions[s.fileId]===em?' reacted':'';return '<button class="modal-reaction-btn'+reacted+'" onclick="reaccionar(event,\''+s.fileId+'\',\''+em+'\')">'+em+'<span class="r-count">'+(cnt>0?cnt:'')+'</span></button>';}).join('');
+// ── Modal ────────────────────────────────────────────────────
+function abrirModal(s) {
+  document.getElementById('modalImg').src = s.fileId ? 'https://drive.google.com/uc?export=view&id=' + s.fileId : s.url;
+  document.getElementById('modalName').textContent = s.name;
+  document.getElementById('modalGrade').textContent = '📚 ' + s.grade;
+  document.getElementById('modalDriveLink').href = s.url;
+
+  var reacts = allReactions[s.fileId] || {};
+  var html = EMOJIS.map(function(em) {
+    var cnt = reacts[em] || 0;
+    var reacted = myReactions[s.fileId] === em ? ' reacted' : '';
+    return '<button class="modal-reaction-btn' + reacted + '" onclick="reaccionar(event,\'' + s.fileId + '\',\'' + em + '\')">' +
+             em + '<span class="r-count">' + (cnt > 0 ? cnt : '') + '</span>' +
+           '</button>';
+  }).join('');
+  document.getElementById('modalReactions').innerHTML = html;
   document.getElementById('modal').classList.add('open');
 }
-function cerrarModal(e){if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('open');}
-function filtrar(){
-  var search=document.getElementById('searchInput').value.toLowerCase();
-  var grade=document.getElementById('gradeFilter').value;
-  var result=allStudents.filter(function(s){return s.name.toLowerCase().includes(search)&&(!grade||s.grade===grade);});
-  if(activeEmoji){result=result.filter(function(s){return(allReactions[s.fileId]||{})[activeEmoji]>0;}).sort(function(a,b){return((allReactions[b.fileId]||{})[activeEmoji]||0)-((allReactions[a.fileId]||{})[activeEmoji]||0);});}
+
+function cerrarModal(e) {
+  if (e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+// ── Filtros ───────────────────────────────────────────────────
+function filtrar() {
+  var search = document.getElementById('searchInput').value.toLowerCase();
+  var grade  = document.getElementById('gradeFilter').value;
+  var result = allStudents.filter(function(s) {
+    return s.name.toLowerCase().includes(search) && (!grade || s.grade === grade);
+  });
+  if (activeEmoji) {
+    result = result.filter(function(s) {
+      return (allReactions[s.fileId] || {})[activeEmoji] > 0;
+    }).sort(function(a, b) {
+      return ((allReactions[b.fileId] || {})[activeEmoji] || 0) -
+             ((allReactions[a.fileId] || {})[activeEmoji] || 0);
+    });
+  }
   renderGrid(result);
 }
-function filtrarEmoji(btn,emoji){activeEmoji=emoji;document.querySelectorAll('.ef-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');filtrar();}
-function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+
+function filtrarEmoji(btn, emoji) {
+  activeEmoji = emoji;
+  document.querySelectorAll('.ef-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  filtrar();
+}
+
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2500);
+}
 </script>
 </body>
 </html>
