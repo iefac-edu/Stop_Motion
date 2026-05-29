@@ -123,7 +123,7 @@
       <div class="steps">
         <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Escribe tu nombre y grado</strong><span>Así tu profe sabe que es tu trabajo.</span></div></div>
         <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Elige cómo hacer tu GIF</strong><span>Subir 16 fotos O tomar 8 fotos con la cámara.</span></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Toma tus fotos en orden</strong><span>¡Sonríe! Las fotos se guardarán en el orden que las tomes.</span></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Toma tus fotos en orden</strong><span>Las fotos se guardarán en el orden que las tomes.</span></div></div>
         <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Toca "Generar GIF" y luego "Guardar"</strong><span>Tu profe podrá verlo en la galería.</span></div></div>
       </div>
       <div class="tip-box"><div class="tip-icon">💡</div><p><strong>¡Consejo!</strong> Para tomar fotos, necesitas permitir el acceso a tu cámara.</p></div>
@@ -149,6 +149,7 @@
       <video id="videoCamara" autoplay playsinline></video>
       <div>
         <button class="btn-camara" id="btnTomarFoto" onclick="tomarFoto()">📷 Tomar foto</button>
+        <button class="btn-camara" id="btnFlipCam" onclick="flipCamara()">🔄 Cambiar cámara</button>
         <button class="btn-camara btn-danger-camara" onclick="resetFotos()">🗑️ Reiniciar</button>
       </div>
       <div class="fotos-tomadas" id="fotosTomadas"></div>
@@ -211,7 +212,7 @@ function apiPost(body){
     .catch(function(e){ return { success: false, error: e.toString() }; });
 }
 
-var imageData=[],gifDataUrl=null,modoActual='camara',fotosCamara=[],streamCamara=null;
+var imageData=[],gifDataUrl=null,modoActual='camara',fotosCamara=[],streamCamara=null,facingMode='environment';
 
 function irAFormulario(){ document.getElementById('screenInstrucciones').classList.remove('active'); document.getElementById('screenFormulario').classList.add('active'); iniciarCamara(); }
 function irAInstrucciones(){ document.getElementById('screenFormulario').classList.remove('active'); document.getElementById('screenInstrucciones').classList.add('active'); detenerCamara(); }
@@ -230,11 +231,18 @@ function setModo(modo){
 async function iniciarCamara(){
   try{
     if(streamCamara) streamCamara.getTracks().forEach(function(t){t.stop();});
-    var stream=await navigator.mediaDevices.getUserMedia({video:true});
+    var stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facingMode}});
     streamCamara=stream; document.getElementById('videoCamara').srcObject=stream;
   }catch(err){ toast('No se pudo acceder a la cámara. Usa la opción de subir fotos.','err'); setModo('upload'); }
 }
 function detenerCamara(){ if(streamCamara){streamCamara.getTracks().forEach(function(t){t.stop();});streamCamara=null;} }
+
+function flipCamara(){
+  facingMode = facingMode==='environment' ? 'user' : 'environment';
+  // Espejo solo para cámara frontal
+  document.getElementById('videoCamara').style.transform = facingMode==='user' ? 'scaleX(-1)' : 'scaleX(1)';
+  iniciarCamara();
+}
 
 function tomarFoto(){
   if(fotosCamara.length>=8){toast('Ya tomaste 8 fotos. Reinicia para tomar más.','err');return;}
