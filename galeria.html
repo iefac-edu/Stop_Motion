@@ -106,7 +106,12 @@
 <div id="toast"></div>
 <script>
 var API_URL='https://script.google.com/macros/s/AKfycbzYScFfkX2fqVbQKu_gzV_aTs0CuLdUKy8jRSHzon9a1hzZ3K82djLdfqRcNvJf7-SaKw/exec';
-function apiGet(action){return fetch(API_URL+'?action='+action).then(function(r){return r.json();}).catch(function(){return null;});}
+function apiGet(action){
+  return fetch(API_URL+'?action='+action, {redirect:'follow'})
+    .then(function(r){ return r.text(); })
+    .then(function(t){ try{ return JSON.parse(t); }catch(e){ return null; } })
+    .catch(function(){ return null; });
+}
 function apiPost(body){return fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).catch(function(){return null;});}
 
 var EMOJIS=['❤️','🔥','😂','👏','😮'];
