@@ -288,36 +288,42 @@ var allReactions = {};
 var myReactions  = JSON.parse(localStorage.getItem('myReactions') || '{}');
 var activeEmoji  = '';
 
-// ── Cargar datos ────────────────────────────────────────────
-fetch(API_URL + '?action=getStudents')
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    allStudents = data || [];
-    var grades = [...new Set(allStudents.map(function(s) { return s.grade; }))].sort();
-    var sel = document.getElementById('gradeFilter');
-    grades.forEach(function(g) {
-      var o = document.createElement('option'); o.value = o.textContent = g; sel.appendChild(o);
-    });
-    cargarReacciones();
-  })
-  .catch(function() {
+// ── JSONP helper (evita CORS de Apps Script) ────────────────
+function jsonp(url, callback) {
+  var name = 'cb_' + Math.round(Math.random() * 1e8);
+  window[name] = function(data) {
+    delete window[name];
+    document.head.removeChild(script);
+    callback(data);
+  };
+  var script = document.createElement('script');
+  script.src = url + '&callback=' + name;
+  script.onerror = function() {
+    delete window[name];
+    document.head.removeChild(script);
     document.getElementById('loading').innerHTML = '😢 No se pudieron cargar los GIFs.';
+  };
+  document.head.appendChild(script);
+}
+
+// ── Cargar datos ────────────────────────────────────────────
+jsonp(API_URL + '?action=getStudents', function(data) {
+  allStudents = data || [];
+  var grades = [...new Set(allStudents.map(function(s) { return s.grade; }))].sort();
+  var sel = document.getElementById('gradeFilter');
+  grades.forEach(function(g) {
+    var o = document.createElement('option'); o.value = o.textContent = g; sel.appendChild(o);
   });
+  cargarReacciones();
+});
 
 function cargarReacciones() {
-  fetch(API_URL + '?action=getReactions')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      allReactions = data || {};
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('grid').style.display = 'grid';
-      renderGrid(allStudents);
-    })
-    .catch(function() {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('grid').style.display = 'grid';
-      renderGrid(allStudents);
-    });
+  jsonp(API_URL + '?action=getReactions', function(data) {
+    allReactions = data || {};
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('grid').style.display = 'grid';
+    renderGrid(allStudents);
+  });
 }
 
 // ── Render grid ─────────────────────────────────────────────
