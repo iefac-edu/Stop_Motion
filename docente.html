@@ -8,7 +8,12 @@
 <script>
 var API_URL='https://script.google.com/macros/s/AKfycbzYScFfkX2fqVbQKu_gzV_aTs0CuLdUKy8jRSHzon9a1hzZ3K82djLdfqRcNvJf7-SaKw/exec';
 var api={
-  get:function(action){return fetch(API_URL+'?action='+action).then(function(r){return r.json();}).catch(function(){return null;});},
+  get:function(action){
+    return fetch(API_URL+'?action='+action,{redirect:'follow'})
+      .then(function(r){return r.text();})
+      .then(function(t){try{return JSON.parse(t);}catch(e){return null;}})
+      .catch(function(){return null;});
+  },
   post:function(body){
     return fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)})
       .then(function(){return{success:true};})
