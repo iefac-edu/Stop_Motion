@@ -335,7 +335,8 @@ function saveGif(){
   document.getElementById('btnSave').disabled=true;
   setProgress(10,'Guardando en Drive…');
   document.getElementById('progressWrap').style.display='block';
-  apiPost({action:'saveStudentGif',studentName:name,grade:grade,gifBase64:gifDataUrl}).then(function(result){
+  var numFrames = modoActual==='camara' ? 8 : 16;
+  apiPost({action:'saveStudentGif',studentName:name,grade:grade,gifBase64:gifDataUrl,frames:numFrames}).then(function(result){
     if(result&&result.success){setProgress(100,'¡Guardado!');document.getElementById('successBox').style.display='block';document.getElementById('btnSave').style.display='none';toast('¡GIF guardado!','ok');}
     else{toast('Error al guardar: '+(result?result.error:'sin respuesta'),'err');document.getElementById('btnSave').disabled=false;}
   });
