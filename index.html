@@ -199,7 +199,17 @@
 <div id="toast"></div>
 <script>
 var API_URL = 'https://script.google.com/macros/s/AKfycbzYScFfkX2fqVbQKu_gzV_aTs0CuLdUKy8jRSHzon9a1hzZ3K82djLdfqRcNvJf7-SaKw/exec';
-function apiPost(body){ return fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).catch(function(e){return{success:false,error:e.toString()};}); }
+function apiPost(body){
+  // Apps Script bloquea POST con CORS desde dominios externos.
+  // Usamos no-cors + Content-Type text/plain (evita preflight)
+  return fetch(API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(body)
+  }).then(function(){ return { success: true }; })
+    .catch(function(e){ return { success: false, error: e.toString() }; });
+}
 
 var imageData=[],gifDataUrl=null,modoActual='camara',fotosCamara=[],streamCamara=null;
 
