@@ -57,7 +57,7 @@
   .camara-guia {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 85%; aspect-ratio: 16/7;
+    width: 85%; aspect-ratio: 10.7/7;
     border: 3px solid #4CAF50; border-radius: 4px;
     box-shadow: 0 0 0 2000px rgba(0,0,0,0.45);
     pointer-events: none;
@@ -166,7 +166,7 @@
       <div class="camara-wrap">
         <video id="videoCamara" autoplay playsinline></video>
         <div class="camara-guia">
-          <span class="camara-guia-label">📐 Encuadra tu dibujo aquí — 16 × 7 cm</span>
+          <span class="camara-guia-label">📐 Encuadra tu dibujo aquí — 10.7 × 7 cm</span>
         </div>
       </div>
       <div>
@@ -286,16 +286,16 @@ function tomarFoto(){
   var sw=guiaW*scaleX, sh=guiaH*scaleY;
 
   var canvas=document.createElement('canvas');
-  canvas.width=320; canvas.height=140;
+  canvas.width=214; canvas.height=140;
   var ctx=canvas.getContext('2d');
 
   if(facingMode==='user'){
     // Para frontal: deshacer el espejo al capturar
     ctx.save(); ctx.scale(-1,1);
-    ctx.drawImage(video, sx, sy, sw, sh, -320, 0, 320, 140);
+    ctx.drawImage(video, sx, sy, sw, sh, -214, 0, 214, 140);
     ctx.restore();
   } else {
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 320, 140);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 214, 140);
   }
 
   var dataUrl=canvas.toDataURL('image/jpeg',0.85);
