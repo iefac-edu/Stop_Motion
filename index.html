@@ -50,23 +50,24 @@
   .modo-btn:not(.active):hover { background: #E8F0FE; color: var(--primary); }
   .camara-container { display: none; text-align: center; }
   .camara-container.active { display: block; }
-  /* Sin espejo por defecto — se aplica por JS solo en cámara frontal */
-  #videoCamara { width: 100%; max-width: 400px; border-radius: 16px; background: #000; display: block; margin: 0 auto 8px; }
-  /* Guía de encuadre 16:7 */
-  .camara-wrap { position: relative; width: 100%; max-width: 400px; margin: 0 auto 12px; }
+
+  /* ── CÁMARA: video sin espejo por defecto ── */
+  .camara-wrap { position: relative; width: 100%; max-width: 400px; margin: 0 auto 12px; overflow: hidden; border-radius: 16px; background: #000; }
+  #videoCamara { width: 100%; display: block; }
   .camara-guia {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     width: 85%; aspect-ratio: 16/7;
-    border: 3px solid #4CAF50; border-radius: 6px;
-    box-shadow: 0 0 0 2000px rgba(0,0,0,0.35);
+    border: 3px solid #4CAF50; border-radius: 4px;
+    box-shadow: 0 0 0 2000px rgba(0,0,0,0.45);
     pointer-events: none;
   }
-  .camara-guia span {
-    position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+  .camara-guia-label {
+    position: absolute; bottom: -26px; left: 50%; transform: translateX(-50%);
     background: #4CAF50; color: #fff; font-size: 11px; font-weight: 700;
     padding: 2px 10px; border-radius: 10px; white-space: nowrap;
   }
+
   .btn-camara { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: 40px; font-size: 16px; font-weight: 700; cursor: pointer; margin: 5px; transition: all .2s; }
   .btn-camara:hover { transform: scale(1.02); background: #1a56c4; }
   .btn-camara:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -164,11 +165,13 @@
       <div class="card-title">📸 Toma 8 fotos (en orden)</div>
       <div class="camara-wrap">
         <video id="videoCamara" autoplay playsinline></video>
-        <div class="camara-guia"><span>📐 Encuadra tu dibujo aquí — 16 × 7 cm</span></div>
+        <div class="camara-guia">
+          <span class="camara-guia-label">📐 Encuadra tu dibujo aquí — 16 × 7 cm</span>
+        </div>
       </div>
       <div>
         <button class="btn-camara" id="btnTomarFoto" onclick="tomarFoto()">📷 Tomar foto</button>
-        <button class="btn-camara" id="btnFlipCam" onclick="flipCamara()">🔄 Cámara delantera</button>
+        <button class="btn-camara" id="btnFlipCam" onclick="flipCamara()">🔄 Cambiar cámara</button>
         <button class="btn-camara btn-danger-camara" onclick="resetFotos()">🗑️ Reiniciar</button>
       </div>
       <div class="fotos-tomadas" id="fotosTomadas"></div>
@@ -221,7 +224,8 @@
 var API_URL = 'https://script.google.com/macros/s/AKfycbzYScFfkX2fqVbQKu_gzV_aTs0CuLdUKy8jRSHzon9a1hzZ3K82djLdfqRcNvJf7-SaKw/exec';
 function apiPost(body){
   return fetch(API_URL, {
-    method: 'POST', mode: 'no-cors',
+    method: 'POST',
+    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(body)
   }).then(function(){ return { success: true }; })
@@ -251,7 +255,7 @@ async function iniciarCamara(){
     streamCamara=stream;
     var video=document.getElementById('videoCamara');
     video.srcObject=stream;
-    // Espejo SOLO en cámara delantera
+    // Espejo solo en cámara delantera
     video.style.transform = facingMode==='user' ? 'scaleX(-1)' : 'none';
   }catch(err){ toast('No se pudo acceder a la cámara. Usa la opción de subir fotos.','err'); setModo('upload'); }
 }
@@ -259,27 +263,50 @@ function detenerCamara(){ if(streamCamara){streamCamara.getTracks().forEach(func
 
 function flipCamara(){
   facingMode = facingMode==='environment' ? 'user' : 'environment';
-  document.getElementById('btnFlipCam').textContent = facingMode==='environment' ? '🔄 Cámara delantera' : '🔄 Cámara trasera';
+  document.getElementById('btnFlipCam').textContent = facingMode==='environment' ? '🔄 Cambiar cámara' : '🔄 Cámara trasera';
   iniciarCamara();
 }
 
 function tomarFoto(){
   if(fotosCamara.length>=8){toast('Ya tomaste 8 fotos. Reinicia para tomar más.','err');return;}
   var video=document.getElementById('videoCamara');
+  var guia=document.querySelector('.camara-guia');
+  var wrap=document.querySelector('.camara-wrap');
+
+  // Calcular el área del recuadro verde en coordenadas del video real
+  var wrapW=wrap.offsetWidth, wrapH=wrap.offsetHeight;
+  var guiaW=guia.offsetWidth, guiaH=guia.offsetHeight;
+  var guiaX=(wrapW-guiaW)/2, guiaY=(wrapH-guiaH)/2;
+
+  // Escala entre el video en pantalla y el video real
+  var scaleX=video.videoWidth/wrapW, scaleY=video.videoHeight/wrapH;
+
+  // Coordenadas en el video real
+  var sx=guiaX*scaleX, sy=guiaY*scaleY;
+  var sw=guiaW*scaleX, sh=guiaH*scaleY;
+
   var canvas=document.createElement('canvas');
-  // Proporción 16:7 igual al dibujo físico
   canvas.width=320; canvas.height=140;
   var ctx=canvas.getContext('2d');
+
   if(facingMode==='user'){
-    // Deshacer el espejo visual al capturar
-    ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-320,0,320,140); ctx.restore();
+    // Para frontal: deshacer el espejo al capturar
+    ctx.save(); ctx.scale(-1,1);
+    ctx.drawImage(video, sx, sy, sw, sh, -320, 0, 320, 140);
+    ctx.restore();
   } else {
-    ctx.drawImage(video,0,0,320,140);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 320, 140);
   }
+
   var dataUrl=canvas.toDataURL('image/jpeg',0.85);
   fotosCamara.push(dataUrl);
   var cont=document.getElementById('fotosTomadas'); cont.innerHTML='';
-  fotosCamara.forEach(function(f,i){ var w=document.createElement('div'); w.style.position='relative'; var img=document.createElement('img'); img.src=f; img.className='foto-preview'; var n=document.createElement('span'); n.style.cssText='position:absolute;bottom:2px;right:2px;background:#4CAF50;color:#fff;border-radius:8px;padding:1px 4px;font-size:10px;font-weight:bold;'; n.textContent=i+1; w.appendChild(img); w.appendChild(n); cont.appendChild(w); });
+  fotosCamara.forEach(function(f,i){
+    var w=document.createElement('div'); w.style.position='relative';
+    var img=document.createElement('img'); img.src=f; img.className='foto-preview';
+    var n=document.createElement('span'); n.style.cssText='position:absolute;bottom:2px;right:2px;background:#4CAF50;color:#fff;border-radius:8px;padding:1px 4px;font-size:10px;font-weight:bold;';
+    n.textContent=i+1; w.appendChild(img); w.appendChild(n); cont.appendChild(w);
+  });
   document.getElementById('contadorFotos').textContent='📸 Fotos tomadas: '+fotosCamara.length+' de 8';
   imageData=fotosCamara.map(function(f,i){return{name:'foto_'+(i+1),dataUrl:f};});
   document.getElementById('btnCreate').disabled=fotosCamara.length!==8;
@@ -347,16 +374,9 @@ function createGif(){
   gifDataUrl=null; setProgress(10,'Preparando…');
   var frames=fotosValidas.map(function(d){return d.dataUrl;});
   var interval=parseFloat(document.getElementById('gifSpeed').value)||0.1;
-  var isCamera=modoActual==='camara';
   setTimeout(function(){
     setProgress(20,'Generando GIF…');
-    gifshot.createGIF({
-      images:frames,
-      gifWidth: isCamera ? 320 : 200,
-      gifHeight: isCamera ? 140 : 200,
-      interval:interval,numWorkers:2,
-      progressCallback:function(p){setProgress(20+Math.round(p*75),'Creando GIF… '+Math.round(p*100)+'%');}
-    },function(obj){
+    gifshot.createGIF({images:frames,gifWidth:200,gifHeight:200,interval:interval,numWorkers:2,progressCallback:function(p){setProgress(20+Math.round(p*75),'Creando GIF… '+Math.round(p*100)+'%');}},function(obj){
       document.getElementById('btnCreate').disabled=false;
       if(obj.error){document.getElementById('progressWrap').style.display='none';toast('Error al crear el GIF 😢','err');return;}
       gifDataUrl=obj.image; setProgress(100,'¡GIF listo!');
@@ -377,7 +397,7 @@ function saveGif(){
   document.getElementById('btnSave').disabled=true;
   setProgress(10,'Guardando en Drive…');
   document.getElementById('progressWrap').style.display='block';
-  var numFrames=modoActual==='camara'?8:16;
+  var numFrames = modoActual==='camara' ? 8 : 16;
   apiPost({action:'saveStudentGif',studentName:name,grade:grade,gifBase64:gifDataUrl,frames:numFrames}).then(function(result){
     if(result&&result.success){setProgress(100,'¡Guardado!');document.getElementById('successBox').style.display='block';document.getElementById('btnSave').style.display='none';toast('¡GIF guardado!','ok');}
     else{toast('Error al guardar: '+(result?result.error:'sin respuesta'),'err');document.getElementById('btnSave').disabled=false;}
