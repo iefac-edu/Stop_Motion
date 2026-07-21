@@ -190,16 +190,7 @@ function renderGrid(students) {
              '</button>';
     }).join('');
 
-   card.innerHTML =
-  '<div class="card-thumb">' +
-    '<img src="' + thumb + '" alt="GIF de ' + s.name + '" loading="lazy" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src=\'https://drive.google.com/uc?export=view&id=' + s.fileId + '\';}">' +
-    '<span class="card-badge">' + (totalR > 0 ? totalR + ' reacciones' : 'GIF animado') + '</span>' +
-  '</div>' +
-  '<div class="card-info">' +
-    '<div class="card-name">✨ ' + s.name + '</div>' +
-    '<span class="card-grade">📚 ' + s.grade + '</span>' +
-  '</div>' +
-  '<div class="reactions">' + reactBtns + '</div>';
+   card.innerHTML = '<div class="card-thumb">' + '<img src="' + thumb + '" alt="GIF de ' + s.name + '" loading="lazy" onerror="this.src=\'https://placehold.co/200/667eea/white?text=GIF\'">' + '<span class="card-badge">' + (totalR > 0 ? totalR + ' reacciones' : 'GIF animado') + '</span>' + '</div>' + '<div class="card-info">' + '<div class="card-name">✨ ' + s.name + '</div>' + '<span class="card-grade">📚 ' + s.grade + '</span>' + '</div>' + '<div class="reactions">' + reactBtns + '</div>';
 
     card.querySelector('.card-thumb').addEventListener('click', function() { abrirModal(s); });
     card.querySelector('.card-info').addEventListener('click',  function() { abrirModal(s); });
