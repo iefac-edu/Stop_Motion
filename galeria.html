@@ -341,7 +341,7 @@ function renderGrid(students) {
     'Mostrando <span>' + students.length + '</span> GIF' + (students.length !== 1 ? 's' : '');
 
   students.forEach(function(s) {
-    var thumb   = s.fileId ? 'https://drive.google.com/thumbnail?id=' + s.fileId + '&sz=w200' : '';
+    var thumb   = s.fileId ? 'https://drive.google.com/uc?export=view&id=' + s.fileId;
     var reacts  = allReactions[s.fileId] || {};
     var totalR  = EMOJIS.reduce(function(a, e) { return a + (reacts[e] || 0); }, 0);
 
